@@ -73,6 +73,7 @@ class MLPPolicySL(BasePolicy, nn.Module, metaclass=abc.ABCMeta):
     update:
         Trains the policy with a supervised learning objective
     """
+    ## version plus simple que la version 2022, changer forward() pour changer de style de policy, attention forward() est appelée dans update() mais aussi dans run_hw1.
     def __init__(self,
                  ac_dim,
                  ob_dim,

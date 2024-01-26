@@ -39,7 +39,7 @@ def run_training_loop(params):
 
     #############
     ## INIT
-    #############
+    ############# dans le fichier BCAgent de la version 2022
 
     # Get params, create logger, create TF session
     logger = Logger(params['logdir'])
@@ -59,7 +59,7 @@ def run_training_loop(params):
 
     #############
     ## ENV
-    #############
+    ############# dans le fichier BCAgent de la version 2022
 
     # Make the gym environment
     env = gym.make(params['env_name'], render_mode=None)
@@ -82,7 +82,7 @@ def run_training_loop(params):
 
     #############
     ## AGENT
-    #############
+    ############# dans le fichier BCAgent de la version 2022
 
     # TODO: Implement missing functions in this class. DONE
     actor = MLPPolicySL(
@@ -98,7 +98,7 @@ def run_training_loop(params):
 
     #######################
     ## LOAD EXPERT POLICY
-    #######################
+    ####################### déjà dans le run_hw1 de la version 2022
 
     print('Loading expert policy from...', params['expert_policy_file'])
     expert_policy = LoadedGaussianPolicy(params['expert_policy_file'])
@@ -107,7 +107,7 @@ def run_training_loop(params):
 
     #######################
     ## TRAINING LOOP
-    #######################
+    ####################### dans le fichier RLTrainer de la version 2022
 
     # init vars at beginning of training
     total_envsteps = 0
@@ -127,7 +127,8 @@ def run_training_loop(params):
             paths = pickle.load(open(params['expert_data'], 'rb'))
             envsteps_this_batch = 0
         else:
-            # DAGGER training from sampled data relabeled by expert LATEEEEERRR
+            # LAAAATEEEEER
+            # DAGGER training from sampled data relabeled by expert
             assert params['do_dagger']
             # TODO: collect `params['batch_size']` transitions
             # HINT: use utils.sample_trajectories
@@ -153,7 +154,7 @@ def run_training_loop(params):
         training_logs = []
         for _ in range(params['num_agent_train_steps_per_iter']):
 
-          # TODO: sample some data from replay_buffer
+          # TODO: sample some data from replay_buffer DONE
           # HINT1: how much data = params['train_batch_size']
           # HINT2: use np.random.permutation to sample random indices
           # HINT3: return corresponding data points from each array (i.e., not different indices from each array)
