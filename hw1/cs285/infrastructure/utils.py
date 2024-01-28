@@ -31,7 +31,6 @@ def sample_trajectory(env, policy, max_path_length, render=False):
             else:
                 img = env.render(mode='single_rgb_array')
             image_obs.append(cv2.resize(img, dsize=(250, 250), interpolation=cv2.INTER_CUBIC))
-    
         ac = ptu.to_numpy(policy.forward(ptu.from_numpy(ob))) # HINT: this is a numpy array
         ac = ac[0]
 
