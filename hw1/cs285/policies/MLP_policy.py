@@ -53,7 +53,6 @@ def build_mlp(
     mlp = nn.Sequential(*layers)
     return mlp
 
-
 class MLPPolicySL(BasePolicy, nn.Module, metaclass=abc.ABCMeta):
     """
     Defines an MLP for supervised learning which maps observations to continuous
@@ -124,15 +123,18 @@ class MLPPolicySL(BasePolicy, nn.Module, metaclass=abc.ABCMeta):
         :return:
             action: sampled action(s) from the policy
         """
-        batch_mean = self.mean_net(observation)
-        scale_tril = torch.diag(torch.exp(self.logstd))
-        batch_dim = batch_mean.shape[0]
-        batch_scale_tril = scale_tril.repeat(batch_dim, 1, 1)
-        action_distribution = distributions.MultivariateNormal(
-            batch_mean,
-            scale_tril=batch_scale_tril,
-        )
-        return action_distribution.sample()
+        # batch_mean = self.mean_net(observation)
+        # scale_tril = torch.diag(torch.exp(self.logstd))
+        # batch_dim = batch_mean.shape[0]
+        # batch_scale_tril = scale_tril.repeat(batch_dim, 1, 1)
+        # action_distribution = distributions.MultivariateNormal(
+        #     batch_mean,
+        #     scale_tril=batch_scale_tril,
+        # )
+        # return action_distribution.sample()
+        for layer in self.mean_net:
+            observation = layer(observation)
+        return observation
 
         # TODO: implement the forward pass of the network.
         # You can return anything you want, but you should be able to differentiate
