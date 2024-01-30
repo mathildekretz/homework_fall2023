@@ -41,8 +41,8 @@ class ReplayBuffer(object):
             self.next_obs = next_observations[-self.max_size:]
             self.terminals = terminals[-self.max_size:]
         else:
-            self.obs = np.concatenate([self.obs, observations])[-self.max_size:]
-            self.acs = np.concatenate([self.acs, actions])[-self.max_size:]
+            self.obs = np.concatenate([self.obs, observations[:,0,:]])[-self.max_size:]
+            self.acs = np.concatenate([self.acs, actions[:,0,:]])[-self.max_size:]
             if concat_rew:
                 self.rews = np.concatenate(
                     [self.rews, rewards]
