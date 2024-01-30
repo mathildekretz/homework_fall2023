@@ -131,7 +131,7 @@ class MLPPolicySL(BasePolicy, nn.Module, metaclass=abc.ABCMeta):
         #     batch_mean,
         #     scale_tril=batch_scale_tril,
         # )
-        # return action_distribution.sample()
+        # return action_distribution.sample()x
         for layer in self.mean_net:
             observation = layer(observation)
         return observation
