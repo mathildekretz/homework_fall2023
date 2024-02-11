@@ -80,13 +80,16 @@ class PGAgent(nn.Module):
 
         # step 3: use all datapoints (s_t, a_t, adv_t) to update the PG actor/policy
         # TODO: update the PG actor/policy network once using the advantages
-        info: dict = self.actor.update(obs, actions, advantages)
+        info: dict = {'actor_info': self.actor.update(obs, actions, advantages)}
 
 
         # step 4: if needed, use all datapoints (s_t, a_t, q_t) to update the PG critic/baseline
         if self.critic is not None:
             # TODO: perform `self.baseline_gradient_steps` updates to the critic/baseline network
-            critic_info: dict = None
+            critic_info: dict = {}
+            for _ in range(self.baseline_gradient_steps):
+                critic_info = self.critic.update(obs, q_values)
+                info['critic_info'] = critic_info
 
             info.update(critic_info)
 
@@ -106,7 +109,7 @@ class PGAgent(nn.Module):
         else:
             # Case 2: in reward-to-go PG, we only use the rewards after timestep t to estimate the Q-value for (s_t, a_t).
             # In other words: Q(s_t, a_t) = sum_{t'=t}^T gamma^(t'-t) * r_{t'}
-            # TODO: use the helper function self._discounted_reward_to_go to calculate the Q-values
+            # TODO: use the helper function self._discounted_reward_to_go to calculate the Q-values DONE
             q_values = [0] * len(rewards)
             for r in range(len(rewards)) :
                 q_values[r] = self._discounted_reward_to_go(rewards[r])
@@ -124,16 +127,18 @@ class PGAgent(nn.Module):
         Operates on flat 1D NumPy arrays.
         """
         if self.critic is None:
-            # TODO: if no baseline, then what are the advantages?
+            # TODO: if no baseline, then what are the advantages? DONE
             advantages = q_values.copy()
         else:
-            # TODO: run the critic and use it as a baseline
-            values = None
+            # TODO: run the critic and use it as a baseline DONE
+            values = ptu.to_numpy(
+                self.critic(ptu.from_numpy(obs)).squeeze()
+            )
             assert values.shape == q_values.shape
 
             if self.gae_lambda is None:
-                # TODO: if using a baseline, but not GAE, what are the advantages?
-                advantages = None
+                # TODO: if using a baseline, but not GAE, what are the advantages? DONE
+                advantages = q_values - values
             else:
                 # TODO: implement GAE
                 batch_size = obs.shape[0]
@@ -141,19 +146,27 @@ class PGAgent(nn.Module):
                 # HINT: append a dummy T+1 value for simpler recursive calculation
                 values = np.append(values, [0])
                 advantages = np.zeros(batch_size + 1)
+                next_advantage = 0
 
                 for i in reversed(range(batch_size)):
-                    # TODO: recursively compute advantage estimates starting from timestep T.
+                    # TODO: recursively compute advantage estimates starting from timestep T. DONE
                     # HINT: use terminals to handle edge cases. terminals[i] is 1 if the state is the last in its
                     # trajectory, and 0 otherwise.
-                    pass
+                    delta_t = rewards[i] + self.gamma * \
+                        values[i + 1] * (1 - terminals[i]) - values[i]
+                    advantages[i] = delta_t + self.gamma * \
+                        self.gae_lambda * next_advantage * (1 - terminals[i])
+                    next_advantage = advantages[i]
 
                 # remove dummy advantage
                 advantages = advantages[:-1]
 
         # TODO: normalize the advantages to have a mean of zero and a standard deviation of one within the batch
         if self.normalize_advantages:
-            pass
+            mean = np.mean(advantages)
+            # add a small constant to avoid division by zero
+            std = np.std(advantages) + 1e-8
+            advantages = (advantages - mean) / std
 
         return advantages
 
