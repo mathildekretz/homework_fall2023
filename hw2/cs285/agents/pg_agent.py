@@ -80,7 +80,7 @@ class PGAgent(nn.Module):
 
         # step 3: use all datapoints (s_t, a_t, adv_t) to update the PG actor/policy
         # TODO: update the PG actor/policy network once using the advantages
-        info: dict = {'actor_info': self.actor.update(obs, actions, advantages)}
+        info: dict = self.actor.update(obs, actions, advantages)
 
 
         # step 4: if needed, use all datapoints (s_t, a_t, q_t) to update the PG critic/baseline
@@ -88,9 +88,9 @@ class PGAgent(nn.Module):
             # TODO: perform `self.baseline_gradient_steps` updates to the critic/baseline network
             critic_info: dict = {}
             for _ in range(self.baseline_gradient_steps):
-                critic_info = self.critic.update(obs, q_values)
-                info.update(critic_info)
-                info['critic_info'] = critic_info
+                critic_info: dict = self.critic.update(obs, q_values)
+
+            info.update(critic_info)
 
         return info
 

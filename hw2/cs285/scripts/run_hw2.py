@@ -101,12 +101,7 @@ def run_training_loop(args):
             # perform the logging
             for key, value in logs.items():
                 print("{} : {}".format(key, value))
-                # logger.log_scalar(value, key, itr)
-                if isinstance(value, dict):
-                    for sub_key, sub_value in value.items():
-                        logger.log_scalar(sub_value, f'{key}/{sub_key}', itr)
-                else:
-                    logger.log_scalar(value, key, itr)
+                logger.log_scalar(value, key, itr)
             print("Done logging...\n\n")
 
             logger.flush()
