@@ -57,8 +57,13 @@ class MLPPolicy(nn.Module):
     @torch.no_grad()
     def get_action(self, obs: np.ndarray) -> np.ndarray:
         """Takes a single observation (as a numpy array) and returns a single action (as a numpy array)."""
-        # TODO: implement get_action
-        obs = ptu.from_numpy(obs)
+        # TODO: implement get_action DONEs
+        if len(obs.shape) > 1:
+            observation = obs
+        else:
+            observation = obs[None]
+        
+        obs = ptu.from_numpy(observation)
         action_distribution = self.forward(obs)
         if self.discrete:
             action = action_distribution.sample()
@@ -78,7 +83,11 @@ class MLPPolicy(nn.Module):
             action_distribution = distributions.Categorical(logits=self.logits_net(obs))
         else:
             # TODO: define the forward pass for a policy with a continuous action space. DONE
-            action_distribution = distributions.Normal(loc=self.mean_net(obs), scale=torch.exp(self.logstd))
+            mean = self.mean_net(obs)
+            scale_tril = torch.diag(torch.exp(self.logstd))
+            batch_dim = mean.shape[0]
+            batch_scale_tril = scale_tril.repeat(batch_dim, 1, 1)
+            action_distribution = distributions.MultivariateNormal(loc=mean, scale_tril=batch_scale_tril)
         return action_distribution
 
     def update(self, obs: np.ndarray, actions: np.ndarray, *args, **kwargs) -> dict:
@@ -104,7 +113,7 @@ class MLPPolicyPG(MLPPolicy):
         action_distribution = self.forward(obs)
         self.optimizer.zero_grad()
         log_probs = action_distribution.log_prob(actions)
-        loss = -1 * torch.sum(log_probs * advantages)
+        loss = -(log_probs * advantages).mean()
         loss.backward()
         self.optimizer.step()
 

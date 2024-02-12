@@ -89,9 +89,8 @@ class PGAgent(nn.Module):
             critic_info: dict = {}
             for _ in range(self.baseline_gradient_steps):
                 critic_info = self.critic.update(obs, q_values)
+                info.update(critic_info)
                 info['critic_info'] = critic_info
-
-            info.update(critic_info)
 
         return info
 
@@ -132,7 +131,7 @@ class PGAgent(nn.Module):
         else:
             # TODO: run the critic and use it as a baseline DONE
             values = ptu.to_numpy(
-                self.critic(ptu.from_numpy(obs)).squeeze()
+                self.critic.forward(ptu.from_numpy(obs)).squeeze()
             )
             assert values.shape == q_values.shape
 
@@ -152,10 +151,8 @@ class PGAgent(nn.Module):
                     # TODO: recursively compute advantage estimates starting from timestep T. DONE
                     # HINT: use terminals to handle edge cases. terminals[i] is 1 if the state is the last in its
                     # trajectory, and 0 otherwise.
-                    delta_t = rewards[i] + self.gamma * \
-                        values[i + 1] * (1 - terminals[i]) - values[i]
-                    advantages[i] = delta_t + self.gamma * \
-                        self.gae_lambda * next_advantage * (1 - terminals[i])
+                    delta_t = rewards[i] + self.gamma * values[i + 1] * (1 - terminals[i]) - values[i]
+                    advantages[i] = delta_t + self.gamma * self.gae_lambda * next_advantage * (1 - terminals[i])
                     next_advantage = advantages[i]
 
                 # remove dummy advantage
@@ -179,11 +176,9 @@ class PGAgent(nn.Module):
         involve t)!
         """
         T = len(rewards)
-        discounted_sum = 0
-        for t in range(T):
-            discounted_sum += (self.gamma ** t) * rewards[t]
-
-        discounted_rewards = [discounted_sum for _ in range(T)]
+        gamma_list = self.gamma ** np.array(list(range(T)))
+        discounted_sum = np.array(rewards) @ gamma_list
+        discounted_rewards = list([discounted_sum])*T
         return discounted_rewards
 
 
@@ -193,10 +188,9 @@ class PGAgent(nn.Module):
         in each index t is sum_{t'=t}^T gamma^(t'-t) * r_{t'}.
         """
         T = len(rewards)
-        discounted_rewards = [0] * T
+        gamma_array = self.gamma ** np.array(list(range(T)))
+        rewards_array = np.array(rewards)
+        discounted_rewards = []
         for t in range(T):
-            discounted_sum = 0
-            for t_prime in range(T):
-                discounted_sum += (self.gamma**(t_prime-t)) * rewards[t]
-            discounted_rewards[t] = discounted_sum
+            discounted_rewards.append(rewards_array[t:]@gamma_array[:T-t])
         return discounted_rewards

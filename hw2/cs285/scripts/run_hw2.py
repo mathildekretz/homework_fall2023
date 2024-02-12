@@ -77,8 +77,6 @@ def run_training_loop(args):
         # trajs should be a list of dictionaries of NumPy arrays, where each dictionary corresponds to a trajectory.
         # this line converts this into a single dictionary of lists of NumPy arrays.
         trajs_dict = {k: [traj[k] for traj in trajs] for k in trajs[0]}
-        #print(trajs_dict)
-        print(trajs_dict.keys())
 
         # TODO: train the agent using the sampled trajectories and the agent's update function
         train_info: dict = agent.update(obs=trajs_dict['observation'], actions=trajs_dict['action'], rewards=trajs_dict['reward'], terminals=trajs_dict['terminal'])
@@ -103,7 +101,12 @@ def run_training_loop(args):
             # perform the logging
             for key, value in logs.items():
                 print("{} : {}".format(key, value))
-                logger.log_scalar(value, key, itr)
+                # logger.log_scalar(value, key, itr)
+                if isinstance(value, dict):
+                    for sub_key, sub_value in value.items():
+                        logger.log_scalar(sub_value, f'{key}/{sub_key}', itr)
+                else:
+                    logger.log_scalar(value, key, itr)
             print("Done logging...\n\n")
 
             logger.flush()
