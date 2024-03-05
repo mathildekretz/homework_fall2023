@@ -104,10 +104,10 @@ def run_training_loop(config: dict, logger: Logger, args: argparse.Namespace):
         if isinstance(replay_buffer, MemoryEfficientReplayBuffer):
             # We're using the memory-efficient replay buffer,
             # so we only insert next_observation (not observation)
-            replay_buffer.insert(action, reward, next_observation)
+            replay_buffer.insert(action, reward, next_observation, done)
         else:
             # We're using the regular replay buffer
-            replay_buffer.insert(observation, action, reward, next_observation)
+            replay_buffer.insert(observation, action, reward, next_observation, done)
 
         # Handle episode termination
         if done:
@@ -127,7 +127,7 @@ def run_training_loop(config: dict, logger: Logger, args: argparse.Namespace):
             batch = ptu.from_numpy(batch)
 
             # TODO(student): Train the agent. `batch` is a dictionary of numpy arrays, DONE
-            update_info = agent.update(batch["obs"], batch["action"], batch["reward"], batch["next_obs"], batch["dones"], step)
+            update_info = agent.update(batch["observations"], batch["actions"], batch["rewards"], batch["next_observations"], batch["dones"], step)
 
             # Logging code
             update_info["epsilon"] = epsilon
